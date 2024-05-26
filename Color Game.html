@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Prediction Game</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+          body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(#F7971e, #ffd200);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px; /* slightly increased padding */
+    background-color: #333;
+  }
+  
+          .navbar-brand {
+    font-weight: bold;
+    font-size: 1.5em; /* slightly larger font size */
+    color: white; /* white color */
+  }
+  
+  .navbar-links {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navbar-links li {
+    display: inline;
+    margin-left: 15px;
+  }
+  
+  .navbar-links li a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+  }
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+        .color-option {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 1rem;
+            cursor: pointer;
+        }
+        .color1 {
+            background-color: #ff9999;
+        }
+        .color2 {
+            background-color: #99ccff;
+        }
+        .color3 {
+            background-color: #99ff99;
+        }
+        .question-indicator {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-brand">Game</div>
+        <ul class="navbar-links">
+            <li><a href="https://meme-pages.github.io/Games/index.html">Home</a></li>
+            <li><a href="https://meme-pages.github.io/Games/Games.html">Games</a></li>
+            <li><a href="https://meme-pages.github.io/Games/About.html">About</a></li>
+        </ul>
+      </div>
+<div class="container game-container">
+    <h1>Color Prediction Game</h1>
+    <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+    
+    <div id="game" class="mt-4" style="display:none;">
+        <div class="question-indicator">Question <span id="current-question">1</span> of 5</div>
+        <div class="options">
+            <div class="color-option color1" id="color1" onclick="checkAnswer(1)"></div>
+            <div class="color-option color2" id="color2" onclick="checkAnswer(2)"></div>
+            <div class="color-option color3" id="color3" onclick="checkAnswer(3)"></div>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="popup">
+    <div class="popup-content">
+        <h2 id="popup-message"></h2>
+        <button class="btn btn-primary" onclick="restartGame()">Restart</button>
+        <a href="https://meme-pages.github.io/Games/Games.html"><button class="btn btn-secondary" onclick="home()">Home</button></a>
+    </div>
+</div>
+
+<script>
+    const colors = [
+        {id: 1, colorClass: 'color1'},
+        {id: 2, colorClass: 'color2'},
+        {id: 3, colorClass: 'color3'}
+    ];
+
+    let currentQuestion = 0;
+    let correctAnswers = 0;
+
+    function startGame() {
+        currentQuestion = 0;
+        correctAnswers = 0;
+        document.getElementById('game').style.display = 'block';
+        document.querySelector('.btn-primary').style.display = 'none';
+        nextQuestion();
+    }
+
+    function generateRandomNumbers() {
+        let correctIndex = Math.floor(Math.random() * 3);
+        let randomNumbers = colors.map((color, index) => {
+            if (index === correctIndex) {
+                return { ...color, number: (Math.floor(Math.random() * 10) + 1) * 6 };
+            } else {
+                let number;
+                do {
+                    number = Math.floor(Math.random() * 100) + 1;
+                } while (number % 6 === 0);
+                return { ...color, number };
+            }
+        });
+        return randomNumbers;
+    }
+
+    function nextQuestion() {
+        if (currentQuestion >= 5) {
+            endGame(true);
+            return;
+        }
+        currentQuestion++;
+        document.getElementById('current-question').innerText = currentQuestion;
+        const colorOptions = generateRandomNumbers();
+        colorOptions.forEach(option => {
+            const colorDiv = document.getElementById(option.colorClass);
+            colorDiv.innerText = option.number;
+        });
+    }
+
+    function checkAnswer(selectedId) {
+        const selectedColor = document.getElementById('color' + selectedId);
+        const selectedNumber = parseInt(selectedColor.innerText, 10);
+        if (selectedNumber % 6 === 0) {
+            correctAnswers++;
+        } else {
+            endGame(false);
+            return;
+        }
+        nextQuestion();
+    }
+
+    function endGame(won) {
+        const message = won ? 'You Win!' : 'You Lose!';
+        document.getElementById('popup-message').innerText = message;
+        document.getElementById('popup').style.display = 'flex';
+    }
+
+    function restartGame() {
+        document.getElementById('popup').style.display = 'none';
+        document.querySelector('.btn-primary').style.display = 'inline-block';
+        document.getElementById('game').style.display = 'none';
+    }
+
+    function home() {
+        window.location.reload();
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Game</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(#F7971e, #ffd200);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px; /* slightly increased padding */
+    background-color: #333;
+  }
+  .navbar-brand {
+    font-weight: bold;
+    font-size: 1.5em; /* slightly larger font size */
+    color: white; /* white color */
+  }
+  
+  .navbar-links {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navbar-links li {
+    display: inline;
+    margin-left: 15px;
+  }
+  
+  .navbar-links li a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+  }
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+        .question {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .options button {
+            margin: 0.5rem;
+        }
+        .timer, .question-indicator {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-brand">Game</div>
+        <ul class="navbar-links">
+          <li><a href="https://meme-pages.github.io/Games/index.html">Home</a></li>
+          <li><a href="https://meme-pages.github.io/Games/Games.html">Games</a></li>
+          <li><a href="https://meme-pages.github.io/Games/About.html">About</a></li>
+        </ul>
+      </div>
+<div class="container game-container">
+    <h1>Math Game</h1>
+    <div class="form-group">
+        <label for="difficulty">Select Difficulty:</label>
+        <select class="form-control" id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+    
+    <div id="game" class="mt-4" style="display:none;">
+        <div class="timer">Time left: <span id="timer">20</span> seconds</div>
+        <div class="question-indicator">Question <span id="current-question">1</span> of 10</div>
+        <div class="question"></div>
+        <div class="options"></div>
+    </div>
+</div>
+
+<div class="popup" id="popup">
+    <div class="popup-content">
+        <h2 id="popup-message"></h2>
+        <button class="btn btn-primary" onclick="restartGame()">Restart</button>
+        <a href="https://meme-pages.github.io/Games/Games.html"><button class="btn btn-secondary" onclick="home()">Home</button></a>
+    </div>
+</div>
+
+<script>
+    const easyRange = [1, 10];
+    const mediumRange = [1, 50];
+    const hardRange = [1, 100];
+
+    let currentQuestion = 0;
+    let correctAnswers = 0;
+    let difficulty = 'easy';
+    let timer;
+    let timeLeft = 20;
+
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateQuestion() {
+        const range = difficulty === 'easy' ? easyRange : difficulty === 'medium' ? mediumRange : hardRange;
+        const num1 = getRandomInt(range[0], range[1]);
+        const num2 = getRandomInt(range[0], range[1]);
+        const correctAnswer = num1 + num2;
+        const options = new Set([correctAnswer]);
+        while (options.size < 4) {
+            options.add(getRandomInt(range[0] * 2, range[1] * 2));
+        }
+        return { num1, num2, correctAnswer, options: [...options].sort(() => 0.5 - Math.random()) };
+    }
+
+    function startGame() {
+        difficulty = document.getElementById('difficulty').value;
+        currentQuestion = 0;
+        correctAnswers = 0;
+        document.getElementById('game').style.display = 'block';
+        document.querySelector('.form-group').style.display = 'none';
+        document.querySelector('.btn-primary').style.display = 'none';
+        nextQuestion();
+    }
+
+    function startTimer() {
+        timeLeft = 20;
+        document.getElementById('timer').innerText = timeLeft;
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                endGame(false);
+            }
+        }, 1000);
+    }
+
+    function nextQuestion() {
+        if (currentQuestion >= 10) {
+            endGame(true);
+            return;
+        }
+        clearInterval(timer);
+        startTimer();
+        const { num1, num2, correctAnswer, options } = generateQuestion();
+        document.querySelector('.question').innerText = `${num1} + ${num2} = ?`;
+        document.getElementById('current-question').innerText = currentQuestion + 1;
+        const optionsContainer = document.querySelector('.options');
+        optionsContainer.innerHTML = '';
+        options.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'btn btn-info';
+            button.innerText = option;
+            button.onclick = () => checkAnswer(option, correctAnswer);
+            optionsContainer.appendChild(button);
+        });
+        currentQuestion++;
+    }
+
+    function checkAnswer(selected, correct) {
+        clearInterval(timer);
+        if (selected === correct) {
+            correctAnswers++;
+            nextQuestion();
+        } else {
+            endGame(false);
+        }
+    }
+
+    function endGame(won) {
+        const message = won ? 'You Win!' : 'You Lose!';
+        document.getElementById('popup-message').innerText = message;
+        document.getElementById('popup').style.display = 'flex';
+    }
+
+    function restartGame() {
+        document.getElementById('popup').style.display = 'none';
+        document.querySelector('.form-group').style.display = 'block';
+        document.querySelector('.btn-primary').style.display = 'inline-block';
+        document.getElementById('game').style.display = 'none';
+        clearInterval(timer);
+    }
+
+    function home() {
+        window.location.reload();
+    }
+</script>
+
+</body>
+</html>

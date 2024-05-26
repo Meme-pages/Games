@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect 4 Game</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container game-container">
+    <h1>Connect 4</h1>
+    <div id="turn-indicator" class="mb-3"></div>
+    <div id="game-board"></div>
+    <div id="message"></div>
+    <button class="btn btn-primary mt-3" onclick="startGame()">Restart Game</button><a href="https://meme-pages.github.io/Games/Games.html"><br><button class="btn btn-primary mt-3">Home</button></a>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
+<style>
+    body {
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    text-align: center;
+    max-width: 100%;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.cell {
+    width: 80px;
+    height: 80px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.cell::before {
+    content: '';
+    display: block;
+    padding-top: 100%;
+}
+
+.cell:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s;
+}
+
+.red, .yellow {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translateY(-100%);
+    transition: transform 0.5s ease-in-out;
+}
+
+.red {
+    background-color: red;
+}
+
+.yellow {
+    background-color: yellow;
+}
+
+#message {
+    margin: 20px 0;
+    font-size: 1.5rem;
+}
+
+#turn-indicator {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    #game-board {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
+    }
+
+    .cell {
+        width: 50px;
+        height: 50px;
+    }
+}
+</style>
+<script>
+    const ROWS = 6;
+const COLS = 6;
+let board;
+let currentPlayer = 'red';
+
+function createBoard() {
+    const boardElement = document.getElementById('game-board');
+    boardElement.innerHTML = '';
+    board = [];
+    for (let r = 0; r < ROWS; r++) {
+        const row = [];
+        for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            cell.addEventListener('click', onCellClick);
+            boardElement.appendChild(cell);
+            row.push(null);
+        }
+        board.push(row);
+    }
+}
+
+function onCellClick(event) {
+    const col = parseInt(event.target.dataset.col);
+    for (let row = ROWS - 1; row >= 0; row--) {
+        if (!board[row][col]) {
+            board[row][col] = currentPlayer;
+            const cell = document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
+            const disc = document.createElement('div');
+            disc.classList.add(currentPlayer);
+            cell.appendChild(disc);
+            setTimeout(() => disc.style.transform = 'translateY(0)', 0);
+            if (checkWin(row, col)) {
+                endGame(`${currentPlayer} wins!`);
+            } else if (board.flat().every(cell => cell)) {
+                endGame('Draw!');
+            } else {
+                currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+                updateTurnIndicator();
+            }
+            return;
+        }
+    }
+}
+
+function checkWin(row, col) {
+    const directions = [
+        { r: 0, c: 1 },
+        { r: 1, c: 1 },
+        { r: 1, c: 0 },
+        { r: 1, c: -1 },
+    ];
+
+    for (let { r, c } of directions) {
+        let count = 1;
+        for (let i = 1; i < 4; i++) {
+            const newRow = row + i * r;
+            const newCol = col + i * c;
+            if (board[newRow] && board[newRow][newCol] === currentPlayer) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        for (let i = 1; i < 4; i++) {
+            const newRow = row - i * r;
+            const newCol = col - i * c;
+            if (board[newRow] && board[newRow][newCol] === currentPlayer) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        if (count >= 4) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function endGame(message) {
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = message;
+    document.querySelectorAll('.cell').forEach(cell => cell.removeEventListener('click', onCellClick));
+    document.getElementById('turn-indicator').textContent = '';
+}
+
+function updateTurnIndicator() {
+    const turnIndicator = document.getElementById('turn-indicator');
+    turnIndicator.textContent = `${currentPlayer === 'red' ? 'Red' : 'Yellow'}'s turn`;
+    turnIndicator.style.color = currentPlayer;
+}
+
+function startGame() {
+    createBoard();
+    currentPlayer = 'red';
+    document.getElementById('message').textContent = '';
+    updateTurnIndicator();
+}
+
+startGame();
+</script>
